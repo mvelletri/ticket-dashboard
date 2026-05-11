@@ -44,7 +44,6 @@ export function SlaChart({ data }: Props) {
     <div className="bg-white rounded-xl border border-zinc-200 p-5">
       <h2 className="text-sm font-semibold text-zinc-700 mb-1">Distribuição de SLA</h2>
       <p className="text-xs text-zinc-500 mb-4">
-        Tempo de atendimento por faixa · valores negativos considerados como 0 ·{" "}
         <span className="font-medium text-blue-500">Clique em uma barra para filtrar os tickets</span>
       </p>
 

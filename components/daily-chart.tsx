@@ -41,7 +41,7 @@ export function DailyChart({ data }: Props) {
         Tickets Abertos e Concluídos por Dia
       </h2>
       <p className="text-xs text-zinc-500 mb-4">
-        Barras = abertos · Linha = concluídos · <span className="font-medium text-blue-500">Clique em um dia para filtrar os tickets</span>
+        <span className="font-medium text-blue-500">Clique em um dia para filtrar os tickets</span>
       </p>
       <ResponsiveContainer width="100%" height={260}>
         <ComposedChart data={data} margin={{ left: 0, right: 8, bottom: 24 }}>

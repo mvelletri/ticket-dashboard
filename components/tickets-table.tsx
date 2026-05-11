@@ -312,9 +312,9 @@ export function TicketsTable({
       ) : null}
 
       {/* Filter Panel */}
-      <div className="mb-4 border border-zinc-200 rounded-xl overflow-hidden">
+      <div className="mb-4 border border-zinc-200 rounded-xl">
         <button
-          className="w-full flex items-center justify-between px-4 py-3 bg-zinc-50 hover:bg-zinc-100 transition-colors text-left"
+          className={`w-full flex items-center justify-between px-4 py-3 bg-zinc-50 hover:bg-zinc-100 transition-colors text-left ${filtersOpen ? "rounded-t-xl" : "rounded-xl"}`}
           onClick={() => setFiltersOpen((v) => !v)}
         >
           <div className="flex items-center gap-2">

@@ -17,7 +17,7 @@ interface Props {
   color?: string;
   horizontal?: boolean;
   maxItems?: number;
-  filterKey?: string; // URL param name para navegação para /tickets
+  filterKey?: string;
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -52,26 +52,60 @@ export function BarChartCard({
   };
 
   if (horizontal) {
+    const minH = Math.max(display.length * 36, 120);
     return (
-      <div className="bg-white rounded-xl border border-zinc-200 p-5">
+      <div className="bg-white rounded-xl border border-zinc-200 p-5 flex flex-col">
         <h2 className="text-sm font-semibold text-zinc-700 mb-1">{title}</h2>
         {clickable && (
           <p className="text-xs text-blue-500 font-medium mb-3">
             Clique em uma barra para filtrar os tickets
           </p>
         )}
-        <ResponsiveContainer width="100%" height={Math.max(display.length * 36, 120)}>
-          <BarChart data={display} layout="vertical" margin={{ left: 8, right: 24 }}>
-            <XAxis type="number" tick={{ fontSize: 11 }} />
-            <YAxis
-              type="category"
+        <div className="flex-1" style={{ minHeight: minH }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={display} layout="vertical" margin={{ left: 8, right: 24 }}>
+              <XAxis type="number" tick={{ fontSize: 11 }} />
+              <YAxis
+                type="category"
+                dataKey="name"
+                width={140}
+                tick={{ fontSize: 11 }}
+                tickLine={false}
+              />
+              <Tooltip formatter={(v) => [`${v} tickets`, ""]} cursor={{ fill: "#f0f9ff" }} />
+              <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={24} {...barProps}>
+                {display.map((entry) => (
+                  <Cell key={entry.name} fill={PRIORITY_COLORS[entry.name] ?? color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-zinc-200 p-5 flex flex-col">
+      <h2 className="text-sm font-semibold text-zinc-700 mb-1">{title}</h2>
+      {clickable && (
+        <p className="text-xs text-blue-500 font-medium mb-3">
+          Clique em uma barra para filtrar os tickets
+        </p>
+      )}
+      <div className="flex-1" style={{ minHeight: 180 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={display} margin={{ bottom: 32 }}>
+            <XAxis
               dataKey="name"
-              width={140}
-              tick={{ fontSize: 11 }}
-              tickLine={false}
+              tick={{ fontSize: 10 }}
+              interval={0}
+              angle={-30}
+              textAnchor="end"
             />
+            <YAxis tick={{ fontSize: 11 }} />
             <Tooltip formatter={(v) => [`${v} tickets`, ""]} cursor={{ fill: "#f0f9ff" }} />
-            <Bar dataKey="value" radius={[0, 4, 4, 0]} {...barProps}>
+            <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} maxBarSize={40} {...barProps}>
               {display.map((entry) => (
                 <Cell key={entry.name} fill={PRIORITY_COLORS[entry.name] ?? color} />
               ))}
@@ -79,35 +113,6 @@ export function BarChartCard({
           </BarChart>
         </ResponsiveContainer>
       </div>
-    );
-  }
-
-  return (
-    <div className="bg-white rounded-xl border border-zinc-200 p-5">
-      <h2 className="text-sm font-semibold text-zinc-700 mb-1">{title}</h2>
-      {clickable && (
-        <p className="text-xs text-blue-500 font-medium mb-3">
-          Clique em uma barra para filtrar os tickets
-        </p>
-      )}
-      <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={display} margin={{ bottom: 32 }}>
-          <XAxis
-            dataKey="name"
-            tick={{ fontSize: 10 }}
-            interval={0}
-            angle={-30}
-            textAnchor="end"
-          />
-          <YAxis tick={{ fontSize: 11 }} />
-          <Tooltip formatter={(v) => [`${v} tickets`, ""]} cursor={{ fill: "#f0f9ff" }} />
-          <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} {...barProps}>
-            {display.map((entry) => (
-              <Cell key={entry.name} fill={PRIORITY_COLORS[entry.name] ?? color} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
     </div>
   );
 }

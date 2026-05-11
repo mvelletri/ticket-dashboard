@@ -52,7 +52,7 @@ export default async function IndicadoresPage({
         <KpiCard
           label="Concluídos"
           value={kpis.concluidos}
-          sub={kpis.total > 0 ? `${Math.round((kpis.concluidos / kpis.total) * 100)}% do total (incl. Encerrados)` : "—"}
+          sub={kpis.total > 0 ? `${Math.round((kpis.concluidos / kpis.total) * 100)}% do total ` : "—"}
           color="green"
           href="/tickets?status=Concluído,Encerrado"
         />
