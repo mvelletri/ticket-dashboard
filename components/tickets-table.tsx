@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { MultiSelect } from "./multi-select";
 
 export interface TicketRow {
   ticket: string | null;
@@ -26,22 +27,27 @@ export interface TicketRow {
 
 interface Props {
   tickets: TicketRow[];
-  initialStatus?: string;
-  initialPrioridade?: string;
-  initialPosVendas?: string;
-  initialTipo?: string;
-  initialFase?: string;
-  initialOrigem?: string;
-  initialSlaFaixa?: string;
+  initialStatus?: string[];
+  initialPrioridade?: string[];
+  initialPosVendas?: string[];
+  initialTipo?: string[];
+  initialFase?: string[];
+  initialOrigem?: string[];
+  initialRa?: string[];
+  initialSlaFaixa?: string[];
   initialFrom?: string;
   initialTo?: string;
 }
 
-const SLA_FAIXA_LABEL: Record<string, string> = {
-  ok:      "0–5 dias (Bom)",
-  atencao: "5–20 dias (Atenção)",
-  critico: ">20 dias (Crítico)",
-};
+const SLA_FAIXA_OPTIONS = [
+  { value: "ok",      label: "0–5 dias (Bom)" },
+  { value: "atencao", label: "5–20 dias (Atenção)" },
+  { value: "critico", label: ">20 dias (Crítico)" },
+];
+
+const SLA_FAIXA_LABEL: Record<string, string> = Object.fromEntries(
+  SLA_FAIXA_OPTIONS.map((o) => [o.value, o.label])
+);
 
 type SortKey = keyof TicketRow;
 type SortDir = "asc" | "desc";
@@ -122,49 +128,53 @@ interface ColDef {
 }
 
 const COLUMNS: ColDef[] = [
-  { label: "Ticket",         key: "ticket",        className: "w-20" },
-  { label: "Status",         key: "status" },
-  { label: "Prioridade",     key: "prioridade" },
-  { label: "Cliente",        key: "cliente",       className: "min-w-[130px]" },
-  { label: "Assunto",        key: "assunto",       className: "min-w-[160px]" },
-  { label: "Tipo Problema",  key: "tipoProblema",  className: "min-w-[150px]" },
-  { label: "Fase",           key: "fase" },
-  { label: "Pós-vendas",    key: "posVendas" },
-  { label: "Consultor",      key: "consultor" },
-  { label: "Pedido / NF",   key: "pedidoNF" },
-  { label: "Abertura",       key: "dataAbertura" },
-  { label: "Últ. Contato",  key: "ultimoContato" },
-  { label: "RA",             key: "ra",            className: "w-16" },
-  { label: "SLA",            key: "sla",           className: "w-16" },
+  { label: "Ticket",        key: "ticket",       className: "w-20" },
+  { label: "Status",        key: "status" },
+  { label: "Prioridade",    key: "prioridade" },
+  { label: "Cliente",       key: "cliente",      className: "min-w-[130px]" },
+  { label: "Assunto",       key: "assunto",      className: "min-w-[160px]" },
+  { label: "Tipo Problema", key: "tipoProblema", className: "min-w-[150px]" },
+  { label: "Fase",          key: "fase" },
+  { label: "Pós-vendas",   key: "posVendas" },
+  { label: "Consultor",     key: "consultor" },
+  { label: "Pedido / NF",  key: "pedidoNF" },
+  { label: "Abertura",      key: "dataAbertura" },
+  { label: "Últ. Contato", key: "ultimoContato" },
+  { label: "RA",            key: "ra",           className: "w-16" },
+  { label: "SLA",           key: "sla",          className: "w-16" },
 ];
 
 export function TicketsTable({
   tickets,
-  initialStatus = "",
-  initialPrioridade = "",
-  initialPosVendas = "",
-  initialTipo = "",
-  initialFase = "",
-  initialOrigem = "",
-  initialSlaFaixa = "",
+  initialStatus = [],
+  initialPrioridade = [],
+  initialPosVendas = [],
+  initialTipo = [],
+  initialFase = [],
+  initialOrigem = [],
+  initialRa = [],
+  initialSlaFaixa = [],
   initialFrom = "",
   initialTo = "",
 }: Props) {
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState(initialStatus);
-  const [filterPrioridade, setFilterPrioridade] = useState(initialPrioridade);
-  const [filterPosVendas, setFilterPosVendas] = useState(initialPosVendas);
-  const [filterTipo, setFilterTipo] = useState(initialTipo);
-  const [filterFase, setFilterFase] = useState(initialFase);
-  const [filterOrigem, setFilterOrigem] = useState(initialOrigem);
-  const [filterSlaFaixa, setFilterSlaFaixa] = useState(initialSlaFaixa);
+  const [filterStatus, setFilterStatus] = useState<string[]>(initialStatus);
+  const [filterPrioridade, setFilterPrioridade] = useState<string[]>(initialPrioridade);
+  const [filterPosVendas, setFilterPosVendas] = useState<string[]>(initialPosVendas);
+  const [filterTipo, setFilterTipo] = useState<string[]>(initialTipo);
+  const [filterFase, setFilterFase] = useState<string[]>(initialFase);
+  const [filterOrigem, setFilterOrigem] = useState<string[]>(initialOrigem);
+  const [filterRa, setFilterRa] = useState<string[]>(initialRa);
+  const [filterSlaFaixa, setFilterSlaFaixa] = useState<string[]>(initialSlaFaixa);
   const [dateFrom, setDateFrom] = useState(initialFrom);
   const [dateTo, setDateTo] = useState(initialTo);
   const [sortKey, setSortKey] = useState<SortKey>("dataAbertura");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(
-    !!(initialStatus || initialPrioridade || initialPosVendas || initialTipo || initialFase || initialOrigem || initialFrom)
+    !!(initialStatus.length || initialPrioridade.length || initialPosVendas.length ||
+       initialTipo.length || initialFase.length || initialOrigem.length ||
+       initialRa.length || initialSlaFaixa.length || initialFrom)
   );
   const perPage = 15;
 
@@ -199,19 +209,24 @@ export function TicketsTable({
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return tickets.filter((t) => {
-      if (filterStatus && t.status !== filterStatus) return false;
-      if (filterPrioridade && t.prioridade !== filterPrioridade) return false;
-      if (filterPosVendas && t.posVendas !== filterPosVendas) return false;
-      if (filterTipo && t.tipoProblema !== filterTipo) return false;
-      if (filterFase && t.fase !== filterFase) return false;
-      if (filterOrigem && t.origem !== filterOrigem) return false;
-      if (filterSlaFaixa) {
+      if (filterStatus.length > 0 && !filterStatus.includes(t.status ?? "")) return false;
+      if (filterPrioridade.length > 0 && !filterPrioridade.includes(t.prioridade ?? "")) return false;
+      if (filterPosVendas.length > 0 && !filterPosVendas.includes(t.posVendas ?? "")) return false;
+      if (filterTipo.length > 0 && !filterTipo.includes(t.tipoProblema ?? "")) return false;
+      if (filterFase.length > 0 && !filterFase.includes(t.fase ?? "")) return false;
+      if (filterOrigem.length > 0 && !filterOrigem.includes(t.origem ?? "")) return false;
+      if (filterRa.length > 0 && !filterRa.includes(t.ra ?? "")) return false;
+      if (filterSlaFaixa.length > 0) {
         const raw = parseFloat(t.sla ?? "");
         const v = isNaN(raw) ? null : Math.max(0, raw);
         if (v === null) return false;
-        if (filterSlaFaixa === "ok"      && v > 5) return false;
-        if (filterSlaFaixa === "atencao" && (v <= 5 || v > 20)) return false;
-        if (filterSlaFaixa === "critico" && v <= 20) return false;
+        const inFaixa = filterSlaFaixa.some((faixa) => {
+          if (faixa === "ok")      return v <= 5;
+          if (faixa === "atencao") return v > 5 && v <= 20;
+          if (faixa === "critico") return v > 20;
+          return false;
+        });
+        if (!inFaixa) return false;
       }
       if (dateFromMs !== null || dateToMs !== null) {
         const d = parseDate(t.dataAbertura)?.getTime() ?? null;
@@ -225,7 +240,7 @@ export function TicketsTable({
       }
       return true;
     });
-  }, [tickets, search, filterStatus, filterPrioridade, filterPosVendas, filterTipo, filterFase, filterOrigem, filterSlaFaixa, dateFromMs, dateToMs]);
+  }, [tickets, search, filterStatus, filterPrioridade, filterPosVendas, filterTipo, filterFase, filterOrigem, filterRa, filterSlaFaixa, dateFromMs, dateToMs]);
 
   const sorted = useMemo(
     () => [...filtered].sort((a, b) => compare(a, b, sortKey, sortDir)),
@@ -245,38 +260,59 @@ export function TicketsTable({
     setPage(1);
   }
 
-  const hasFilters = search || filterStatus || filterPrioridade || filterPosVendas || filterTipo || filterFase || filterOrigem || filterSlaFaixa || dateFrom || dateTo;
-  const activeFilterCount = [filterStatus, filterPrioridade, filterPosVendas, filterTipo, filterFase, filterOrigem, filterSlaFaixa, dateFrom || dateTo ? "period" : ""].filter(Boolean).length;
+  const hasFilters =
+    search || filterStatus.length || filterPrioridade.length || filterPosVendas.length ||
+    filterTipo.length || filterFase.length || filterOrigem.length || filterRa.length ||
+    filterSlaFaixa.length || dateFrom || dateTo;
+
+  const activeFilterCount = [
+    filterStatus.length > 0,
+    filterPrioridade.length > 0,
+    filterPosVendas.length > 0,
+    filterTipo.length > 0,
+    filterFase.length > 0,
+    filterOrigem.length > 0,
+    filterRa.length > 0,
+    filterSlaFaixa.length > 0,
+    !!(dateFrom || dateTo),
+  ].filter(Boolean).length;
 
   function clearAll() {
-    setSearch(""); setFilterStatus(""); setFilterPrioridade("");
-    setFilterPosVendas(""); setFilterTipo(""); setFilterFase(""); setFilterOrigem("");
-    setFilterSlaFaixa(""); setDateFrom(""); setDateTo("");
+    setSearch("");
+    setFilterStatus([]); setFilterPrioridade([]); setFilterPosVendas([]);
+    setFilterTipo([]);   setFilterFase([]);        setFilterOrigem([]);
+    setFilterRa([]);     setFilterSlaFaixa([]);
+    setDateFrom(""); setDateTo("");
     setPage(1);
   }
 
-  const hasInitialFilter = initialStatus || initialPrioridade || initialPosVendas || initialTipo || initialFase || initialOrigem || initialSlaFaixa || initialFrom;
+  const hasInitialFilter =
+    initialStatus.length || initialPrioridade.length || initialPosVendas.length ||
+    initialTipo.length || initialFase.length || initialOrigem.length ||
+    initialRa.length || initialSlaFaixa.length || initialFrom;
+
+  function fmtList(arr: string[]) { return arr.join(", "); }
 
   return (
     <div className="bg-white rounded-xl border border-zinc-200 p-5">
-      {/* Banner de filtro vindo dos gráficos */}
-      {hasInitialFilter && (
-        <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-          <span>Filtrado a partir do gráfico:</span>
-          {initialStatus && <span className="font-semibold">Status = {initialStatus}</span>}
-          {initialPrioridade && <span className="font-semibold">Prioridade = {initialPrioridade}</span>}
-          {initialPosVendas && <span className="font-semibold">Pós-vendas = {initialPosVendas}</span>}
-          {initialTipo && <span className="font-semibold">Tipo = {initialTipo}</span>}
-          {initialFase && <span className="font-semibold">Fase = {initialFase}</span>}
-          {initialOrigem && <span className="font-semibold">Origem = {initialOrigem}</span>}
-          {initialSlaFaixa && <span className="font-semibold">SLA = {SLA_FAIXA_LABEL[initialSlaFaixa] ?? initialSlaFaixa}</span>}
+      {/* Banner */}
+      {hasInitialFilter ? (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-4 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+          <span className="font-medium">Filtrado a partir do gráfico:</span>
+          {initialStatus.length > 0    && <span className="font-semibold">Status = {fmtList(initialStatus)}</span>}
+          {initialPrioridade.length > 0 && <span className="font-semibold">Prioridade = {fmtList(initialPrioridade)}</span>}
+          {initialPosVendas.length > 0  && <span className="font-semibold">Pós-vendas = {fmtList(initialPosVendas)}</span>}
+          {initialTipo.length > 0       && <span className="font-semibold">Tipo = {fmtList(initialTipo)}</span>}
+          {initialFase.length > 0       && <span className="font-semibold">Fase = {fmtList(initialFase)}</span>}
+          {initialOrigem.length > 0     && <span className="font-semibold">Origem = {fmtList(initialOrigem)}</span>}
+          {initialRa.length > 0         && <span className="font-semibold">RA = {fmtList(initialRa)}</span>}
+          {initialSlaFaixa.length > 0   && <span className="font-semibold">SLA = {initialSlaFaixa.map((f) => SLA_FAIXA_LABEL[f] ?? f).join(", ")}</span>}
           {initialFrom && <span className="font-semibold">Data = {initialFrom}{initialTo && initialTo !== initialFrom ? ` até ${initialTo}` : ""}</span>}
         </div>
-      )}
+      ) : null}
 
       {/* Filter Panel */}
       <div className="mb-4 border border-zinc-200 rounded-xl overflow-hidden">
-        {/* Header / Toggle */}
         <button
           className="w-full flex items-center justify-between px-4 py-3 bg-zinc-50 hover:bg-zinc-100 transition-colors text-left"
           onClick={() => setFiltersOpen((v) => !v)}
@@ -303,7 +339,6 @@ export function TicketsTable({
           </div>
         </button>
 
-        {/* Filter Body */}
         {filtersOpen && (
           <div className="px-4 py-4 flex flex-col gap-4 border-t border-zinc-100">
             {/* Busca */}
@@ -317,96 +352,61 @@ export function TicketsTable({
               />
             </div>
 
-            {/* Linha 1: Status, Prioridade, Pós-vendas, Tipo */}
+            {/* Classificação */}
             <div>
               <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Classificação</label>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <span className="block text-xs text-zinc-500 mb-1">Status</span>
-                  <select
-                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    value={filterStatus}
-                    onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-                  >
-                    <option value="">Todos</option>
-                    {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  <MultiSelect options={statuses} value={filterStatus} onChange={(v) => { setFilterStatus(v); setPage(1); }} placeholder="Todos" />
                 </div>
                 <div>
                   <span className="block text-xs text-zinc-500 mb-1">Prioridade</span>
-                  <select
-                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    value={filterPrioridade}
-                    onChange={(e) => { setFilterPrioridade(e.target.value); setPage(1); }}
-                  >
-                    <option value="">Todas</option>
-                    {prioridades.map((p) => <option key={p} value={p}>{p}</option>)}
-                  </select>
+                  <MultiSelect options={prioridades} value={filterPrioridade} onChange={(v) => { setFilterPrioridade(v); setPage(1); }} placeholder="Todas" />
                 </div>
                 <div>
                   <span className="block text-xs text-zinc-500 mb-1">Pós-vendas</span>
-                  <select
-                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    value={filterPosVendas}
-                    onChange={(e) => { setFilterPosVendas(e.target.value); setPage(1); }}
-                  >
-                    <option value="">Todos</option>
-                    {agents.map((a) => <option key={a} value={a}>{a}</option>)}
-                  </select>
+                  <MultiSelect options={agents} value={filterPosVendas} onChange={(v) => { setFilterPosVendas(v); setPage(1); }} placeholder="Todos" />
                 </div>
                 <div>
                   <span className="block text-xs text-zinc-500 mb-1">Tipo do Problema</span>
-                  <select
-                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    value={filterTipo}
-                    onChange={(e) => { setFilterTipo(e.target.value); setPage(1); }}
-                  >
-                    <option value="">Todos</option>
-                    {tipos.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
+                  <MultiSelect options={tipos} value={filterTipo} onChange={(v) => { setFilterTipo(v); setPage(1); }} placeholder="Todos" />
                 </div>
               </div>
             </div>
 
-            {/* Linha 2: Fase, Origem, SLA, Período */}
+            {/* Contexto */}
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Contexto & Período</label>
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Contexto</label>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <span className="block text-xs text-zinc-500 mb-1">Fase</span>
-                  <select
-                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    value={filterFase}
-                    onChange={(e) => { setFilterFase(e.target.value); setPage(1); }}
-                  >
-                    <option value="">Todas</option>
-                    {fases.map((f) => <option key={f} value={f}>{f}</option>)}
-                  </select>
+                  <MultiSelect options={fases} value={filterFase} onChange={(v) => { setFilterFase(v); setPage(1); }} placeholder="Todas" />
                 </div>
                 <div>
                   <span className="block text-xs text-zinc-500 mb-1">Origem</span>
-                  <select
-                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    value={filterOrigem}
-                    onChange={(e) => { setFilterOrigem(e.target.value); setPage(1); }}
-                  >
-                    <option value="">Todas</option>
-                    {origens.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
+                  <MultiSelect options={origens} value={filterOrigem} onChange={(v) => { setFilterOrigem(v); setPage(1); }} placeholder="Todas" />
+                </div>
+                <div>
+                  <span className="block text-xs text-zinc-500 mb-1">RA</span>
+                  <MultiSelect options={["Sim", "Não"]} value={filterRa} onChange={(v) => { setFilterRa(v); setPage(1); }} placeholder="Todos" />
                 </div>
                 <div>
                   <span className="block text-xs text-zinc-500 mb-1">Faixa de SLA</span>
-                  <select
-                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  <MultiSelect
+                    options={SLA_FAIXA_OPTIONS.map((o) => o.value)}
                     value={filterSlaFaixa}
-                    onChange={(e) => { setFilterSlaFaixa(e.target.value); setPage(1); }}
-                  >
-                    <option value="">Todas as faixas</option>
-                    <option value="ok">0–5 dias (Bom)</option>
-                    <option value="atencao">5–20 dias (Atenção)</option>
-                    <option value="critico">&gt;20 dias (Crítico)</option>
-                  </select>
+                    onChange={(v) => { setFilterSlaFaixa(v); setPage(1); }}
+                    placeholder="Todas as faixas"
+                  />
                 </div>
+              </div>
+            </div>
+
+            {/* Período */}
+            <div>
+              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Período de Abertura</label>
+              <div className="grid grid-cols-2 gap-3 max-w-sm">
                 <div>
                   <span className="block text-xs text-zinc-500 mb-1">De</span>
                   <input
@@ -428,17 +428,13 @@ export function TicketsTable({
               </div>
             </div>
 
-            {/* Rodapé */}
-            {hasFilters && (
+            {hasFilters ? (
               <div className="flex justify-end border-t border-zinc-100 pt-3">
-                <button
-                  className="text-sm text-red-500 hover:text-red-700 font-medium"
-                  onClick={clearAll}
-                >
+                <button className="text-sm text-red-500 hover:text-red-700 font-medium" onClick={clearAll}>
                   Limpar filtros
                 </button>
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </div>
@@ -464,13 +460,11 @@ export function TicketsTable({
             {paginated.map((t, i) => {
               const slaRaw = parseFloat(t.sla ?? "");
               const sla = isNaN(slaRaw) ? null : Math.max(0, slaRaw);
-              const slaColor = sla === null
-                ? "text-zinc-400"
-                : sla <= 5
-                ? "text-green-600 font-medium"
-                : sla <= 20
-                ? "text-yellow-600 font-medium"
-                : "text-red-600 font-semibold";
+              const slaColor =
+                sla === null        ? "text-zinc-400" :
+                sla <= 5            ? "text-green-600 font-medium" :
+                sla <= 20           ? "text-yellow-600 font-medium" :
+                                      "text-red-600 font-semibold";
               return (
                 <tr key={t.ticket ?? i} className="border-b border-zinc-50 hover:bg-zinc-50 align-top">
                   <td className="py-2 pr-3 font-mono text-blue-600 font-medium">{t.ticket}</td>

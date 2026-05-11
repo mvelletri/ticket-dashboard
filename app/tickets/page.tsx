@@ -8,9 +8,15 @@ interface SearchParams {
   tipo?: string;
   fase?: string;
   origem?: string;
+  ra?: string;
   slaFaixa?: string;
   from?: string;
   to?: string;
+}
+
+function parseMulti(val?: string): string[] {
+  if (!val) return [];
+  return val.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
 export default async function TicketsPage({
@@ -21,18 +27,17 @@ export default async function TicketsPage({
   const params = await searchParams;
   const { tickets, kpis } = await getDashboardData();
 
-  // Mapeamento de searchParams → filtros da tabela
-  const initialStatus = params.status ?? "";
-  const initialPrioridade = params.prioridade ?? "";
-  const initialPosVendas = params.posVendas ?? "";
-  const initialTipo = params.tipo ?? "";
-  const initialFase = params.fase ?? "";
-  const initialOrigem = params.origem ?? "";
-  const initialSlaFaixa = params.slaFaixa ?? "";
-  const initialFrom = params.from ?? "";
-  const initialTo = params.to ?? "";
+  const initialStatus     = parseMulti(params.status);
+  const initialPrioridade = parseMulti(params.prioridade);
+  const initialPosVendas  = parseMulti(params.posVendas);
+  const initialTipo       = parseMulti(params.tipo);
+  const initialFase       = parseMulti(params.fase);
+  const initialOrigem     = parseMulti(params.origem);
+  const initialRa         = parseMulti(params.ra);
+  const initialSlaFaixa   = parseMulti(params.slaFaixa);
+  const initialFrom       = params.from ?? "";
+  const initialTo         = params.to ?? "";
 
-  // key muda quando qualquer filtro muda → força remount da tabela com estado limpo
   const tableKey = JSON.stringify(params);
 
   return (
@@ -49,6 +54,7 @@ export default async function TicketsPage({
         initialTipo={initialTipo}
         initialFase={initialFase}
         initialOrigem={initialOrigem}
+        initialRa={initialRa}
         initialSlaFaixa={initialSlaFaixa}
         initialFrom={initialFrom}
         initialTo={initialTo}

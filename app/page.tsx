@@ -44,23 +44,30 @@ export default async function IndicadoresPage({
 
       {/* KPIs */}
       <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <KpiCard label="Total de Tickets" value={kpis.total} />
+        <KpiCard
+          label="Total de Tickets"
+          value={kpis.total}
+          href="/tickets"
+        />
         <KpiCard
           label="Concluídos"
           value={kpis.concluidos}
-          sub={kpis.total > 0 ? `${Math.round((kpis.concluidos / kpis.total) * 100)}% do total` : "—"}
+          sub={kpis.total > 0 ? `${Math.round((kpis.concluidos / kpis.total) * 100)}% do total (incl. Encerrados)` : "—"}
           color="green"
+          href="/tickets?status=Concluído,Encerrado"
         />
         <KpiCard
           label="SLA Crítico"
           value={kpis.slaCritico}
           sub="tickets acima de 20 dias"
           color={kpis.slaCritico > 0 ? "red" : "green"}
+          href="/tickets?slaFaixa=critico"
         />
         <KpiCard
           label="RAs Abertas"
           value={kpis.raAberta}
           color={kpis.raAberta > 0 ? "yellow" : "default"}
+          href="/tickets?ra=Sim"
         />
         <KpiCard
           label="Duplicados (excluídos)"
