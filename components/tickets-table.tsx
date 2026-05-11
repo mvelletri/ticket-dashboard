@@ -40,9 +40,9 @@ interface Props {
 }
 
 const SLA_FAIXA_OPTIONS = [
-  { value: "ok",      label: "0–5 dias (Bom)" },
-  { value: "atencao", label: "5–20 dias (Atenção)" },
-  { value: "critico", label: ">20 dias (Crítico)" },
+  { value: "ok",      label: "Ok (0–5 dias)" },
+  { value: "atencao", label: "Atenção (5–20 dias)" },
+  { value: "critico", label: "Crítico (>20 dias)" },
 ];
 
 const SLA_FAIXA_LABEL: Record<string, string> = Object.fromEntries(
@@ -129,8 +129,8 @@ interface ColDef {
 
 const COLUMNS: ColDef[] = [
   { label: "Ticket",        key: "ticket",       className: "w-20" },
-  { label: "Status",        key: "status" },
-  { label: "Prioridade",    key: "prioridade" },
+  { label: "Status",        key: "status",       className: "text-center" },
+  { label: "Prioridade",    key: "prioridade",   className: "text-center" },
   { label: "Cliente",       key: "cliente",      className: "min-w-[130px]" },
   { label: "Assunto",       key: "assunto",      className: "min-w-[160px]" },
   { label: "Tipo Problema", key: "tipoProblema", className: "min-w-[150px]" },
@@ -398,6 +398,7 @@ export function TicketsTable({
                     value={filterSlaFaixa}
                     onChange={(v) => { setFilterSlaFaixa(v); setPage(1); }}
                     placeholder="Todas as faixas"
+                    labelMap={SLA_FAIXA_LABEL}
                   />
                 </div>
               </div>
@@ -444,48 +445,47 @@ export function TicketsTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-zinc-100 text-left text-xs text-zinc-500 font-semibold">
-              {COLUMNS.flatMap((col, i) => {
-                const th = (
-                  <th
-                    key={col.key}
-                    className={`pb-2 pr-3 cursor-pointer select-none whitespace-nowrap hover:text-zinc-800 ${col.className ?? ""}`}
-                    onClick={() => handleSort(col.key)}
-                  >
-                    {col.label}
-                    <SortIcon active={sortKey === col.key} dir={sortDir} />
-                  </th>
-                );
-                if (i === 1) return [<th key="__sla_dot" className="pb-2 pr-2 w-5" />, th];
-                return [th];
-              })}
+              {COLUMNS.map((col, i) => (
+                <th
+                  key={col.key}
+                  className={`pb-2 pr-3 cursor-pointer select-none whitespace-nowrap hover:text-zinc-800 ${col.className ?? ""} ${i === 0 ? "sticky left-0 z-20 bg-white border-r border-zinc-100" : ""}`}
+                  onClick={() => handleSort(col.key)}
+                >
+                  {col.label}
+                  <SortIcon active={sortKey === col.key} dir={sortDir} />
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {paginated.map((t, i) => {
               const slaRaw = parseFloat(t.sla ?? "");
               const sla = isNaN(slaRaw) ? null : Math.max(0, slaRaw);
+              const rowBg = i % 2 !== 0 ? "bg-zinc-50" : "bg-white";
               const slaColor =
                 sla === null        ? "text-zinc-400" :
                 sla <= 5            ? "text-green-600 font-medium" :
                 sla <= 20           ? "text-yellow-600 font-medium" :
                                       "text-red-600 font-semibold";
               return (
-                <tr key={t.ticket ?? i} className="border-b border-zinc-50 hover:bg-zinc-50 align-top">
-                  <td className="py-2 pr-3 font-mono text-blue-600 font-medium">{t.ticket}</td>
-                  <td className="py-2 pr-2">
-                    {sla !== null && (
-                      <span
-                        className={`inline-block w-2.5 h-2.5 rounded-full ${
-                          sla <= 5  ? "bg-green-500" :
-                          sla <= 20 ? "bg-yellow-400" :
-                                      "bg-red-500"
-                        }`}
-                        title={`SLA: ${sla.toFixed(1)} dias`}
-                      />
-                    )}
+                <tr key={t.ticket ?? i} className={`border-b border-zinc-100 align-top group hover:bg-zinc-100 ${rowBg}`}>
+                  <td className={`py-2 pr-3 sticky left-0 z-10 group-hover:bg-zinc-100 border-r border-zinc-100 ${rowBg}`}>
+                    <span className="flex items-center gap-2">
+                      {sla !== null && (
+                        <span
+                          className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
+                            sla <= 5  ? "bg-green-500" :
+                            sla <= 20 ? "bg-yellow-400" :
+                                        "bg-red-500"
+                          }`}
+                          title={`SLA: ${sla.toFixed(1)} dias`}
+                        />
+                      )}
+                      <span className="font-mono text-blue-600 font-medium">{t.ticket}</span>
+                    </span>
                   </td>
-                  <td className="py-2 pr-3">{badge(t.status, STATUS_BADGE, "bg-amber-50 text-amber-700")}</td>
-                  <td className="py-2 pr-3">{badge(t.prioridade, PRIORITY_BADGE)}</td>
+                  <td className="py-2 pr-3 text-center">{badge(t.status, STATUS_BADGE, "bg-amber-50 text-amber-700")}</td>
+                  <td className="py-2 pr-3 text-center">{badge(t.prioridade, PRIORITY_BADGE)}</td>
                   <td className="py-2 pr-3 max-w-[130px] truncate text-zinc-700" title={t.cliente ?? ""}>{t.cliente}</td>
                   <td className="py-2 pr-3 max-w-[160px] truncate text-zinc-600" title={t.assunto ?? ""}>{t.assunto}</td>
                   <td className="py-2 pr-3 max-w-[150px] truncate text-zinc-600" title={t.tipoProblema ?? ""}>{t.tipoProblema ?? <span className="text-zinc-300">—</span>}</td>

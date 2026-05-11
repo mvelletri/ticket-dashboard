@@ -52,6 +52,12 @@ function parseDMY(raw: string | null): string | null {
   return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 }
 
+function parsePriority(raw: string | null): string | null {
+  if (!raw) return null;
+  const m = raw.match(/P[1-4]/);
+  return m ? m[0] : raw;
+}
+
 function countBy(rows: Row[], key: string) {
   const counts: Record<string, number> = {};
   for (const row of rows) {
@@ -126,7 +132,7 @@ export async function getDashboardData(from?: string, to?: string) {
     telefone: r["Telefone"],
     assunto: r["Assunto"],
     descricao: r["Descrição"],
-    prioridade: r["Prioridade"],
+    prioridade: parsePriority(r["Prioridade"]),
     fase: r["Fase"],
     tipoProblema: r["Tipo do Problema"],
     posVendas: r["Pós-vendas"],
@@ -153,7 +159,9 @@ export async function getDashboardData(from?: string, to?: string) {
     byDay,
     byStatus: countBy(rows, "Status"),
     byPrioridade: countBy(
-      rows.filter((r) => r["Prioridade"] && r["Prioridade"] !== "Duplicado"),
+      rows
+        .filter((r) => r["Prioridade"] && r["Prioridade"] !== "Duplicado")
+        .map((r) => ({ ...r, "Prioridade": parsePriority(r["Prioridade"]) })),
       "Prioridade"
     ),
     byFase: countBy(rows.filter((r) => r["Fase"]), "Fase"),

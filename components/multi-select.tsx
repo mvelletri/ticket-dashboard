@@ -7,9 +7,11 @@ interface Props {
   value: string[];
   onChange: (v: string[]) => void;
   placeholder: string;
+  labelMap?: Record<string, string>;
 }
 
-export function MultiSelect({ options, value, onChange, placeholder }: Props) {
+export function MultiSelect({ options, value, onChange, placeholder, labelMap }: Props) {
+  const display = (opt: string) => labelMap?.[opt] ?? opt;
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -23,7 +25,7 @@ export function MultiSelect({ options, value, onChange, placeholder }: Props) {
 
   const label =
     value.length === 0 ? placeholder :
-    value.length === 1 ? value[0] :
+    value.length === 1 ? display(value[0]) :
     `${value.length} selecionados`;
 
   function toggle(opt: string) {
@@ -70,7 +72,7 @@ export function MultiSelect({ options, value, onChange, placeholder }: Props) {
                   onChange={() => toggle(opt)}
                   className="rounded border-zinc-300 text-blue-600 focus:ring-blue-400"
                 />
-                <span className="text-sm text-zinc-700 select-none">{opt}</span>
+                <span className="text-sm text-zinc-700 select-none">{display(opt)}</span>
               </label>
             ))}
           </div>
