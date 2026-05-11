@@ -9,18 +9,24 @@ import {
   Cell,
   ResponsiveContainer,
 } from "recharts";
+import { useRouter } from "next/navigation";
 
 interface Props {
   data: { ok: number; atencao: number; critico: number };
 }
 
 const FAIXAS = [
-  { key: "ok",      name: "0–5 dias",   label: "Bom",     color: "#16a34a", textColor: "text-green-600" },
-  { key: "atencao", name: "5–20 dias",  label: "Atenção", color: "#d97706", textColor: "text-yellow-600" },
-  { key: "critico", name: ">20 dias",   label: "Crítico", color: "#dc2626", textColor: "text-red-600" },
+  { key: "ok",      name: "0–5 dias",   label: "Bom",     color: "#16a34a", textColor: "text-green-600",  param: "ok" },
+  { key: "atencao", name: "5–20 dias",  label: "Atenção", color: "#d97706", textColor: "text-yellow-600", param: "atencao" },
+  { key: "critico", name: ">20 dias",   label: "Crítico", color: "#dc2626", textColor: "text-red-600",    param: "critico" },
 ] as const;
 
+const NAME_TO_PARAM: Record<string, string> = Object.fromEntries(
+  FAIXAS.map((f) => [f.name, f.param])
+);
+
 export function SlaChart({ data }: Props) {
+  const router = useRouter();
   const total = data.ok + data.atencao + data.critico;
 
   const chartData = FAIXAS.map((f) => ({
@@ -29,11 +35,17 @@ export function SlaChart({ data }: Props) {
     color: f.color,
   }));
 
+  function handleClick(barName: string) {
+    const param = NAME_TO_PARAM[barName];
+    if (param) router.push(`/tickets?slaFaixa=${param}`);
+  }
+
   return (
     <div className="bg-white rounded-xl border border-zinc-200 p-5">
       <h2 className="text-sm font-semibold text-zinc-700 mb-1">Distribuição de SLA</h2>
       <p className="text-xs text-zinc-500 mb-4">
-        Tempo de atendimento por faixa · valores negativos considerados como 0
+        Tempo de atendimento por faixa · valores negativos considerados como 0 ·{" "}
+        <span className="font-medium text-blue-500">Clique em uma barra para filtrar os tickets</span>
       </p>
 
       {/* Mini KPIs */}
@@ -63,7 +75,15 @@ export function SlaChart({ data }: Props) {
             formatter={(v) => [`${v} tickets`, ""]}
             cursor={{ fill: "#f0f9ff" }}
           />
-          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+          <Bar
+            dataKey="value"
+            radius={[4, 4, 0, 0]}
+            cursor="pointer"
+            onClick={(data: unknown) => {
+              const d = data as { name?: string };
+              if (d.name) handleClick(d.name);
+            }}
+          >
             {chartData.map((entry) => (
               <Cell key={entry.name} fill={entry.color} />
             ))}

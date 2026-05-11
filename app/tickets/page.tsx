@@ -8,6 +8,7 @@ interface SearchParams {
   tipo?: string;
   fase?: string;
   origem?: string;
+  slaFaixa?: string;
   from?: string;
   to?: string;
 }
@@ -27,6 +28,7 @@ export default async function TicketsPage({
   const initialTipo = params.tipo ?? "";
   const initialFase = params.fase ?? "";
   const initialOrigem = params.origem ?? "";
+  const initialSlaFaixa = params.slaFaixa ?? "";
   const initialFrom = params.from ?? "";
   const initialTo = params.to ?? "";
 
@@ -47,6 +49,7 @@ export default async function TicketsPage({
         initialTipo={initialTipo}
         initialFase={initialFase}
         initialOrigem={initialOrigem}
+        initialSlaFaixa={initialSlaFaixa}
         initialFrom={initialFrom}
         initialTo={initialTo}
       />

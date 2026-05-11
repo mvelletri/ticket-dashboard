@@ -32,9 +32,16 @@ interface Props {
   initialTipo?: string;
   initialFase?: string;
   initialOrigem?: string;
+  initialSlaFaixa?: string;
   initialFrom?: string;
   initialTo?: string;
 }
+
+const SLA_FAIXA_LABEL: Record<string, string> = {
+  ok:      "0–5 dias (Bom)",
+  atencao: "5–20 dias (Atenção)",
+  critico: ">20 dias (Crítico)",
+};
 
 type SortKey = keyof TicketRow;
 type SortDir = "asc" | "desc";
@@ -139,6 +146,7 @@ export function TicketsTable({
   initialTipo = "",
   initialFase = "",
   initialOrigem = "",
+  initialSlaFaixa = "",
   initialFrom = "",
   initialTo = "",
 }: Props) {
@@ -149,6 +157,7 @@ export function TicketsTable({
   const [filterTipo, setFilterTipo] = useState(initialTipo);
   const [filterFase, setFilterFase] = useState(initialFase);
   const [filterOrigem, setFilterOrigem] = useState(initialOrigem);
+  const [filterSlaFaixa, setFilterSlaFaixa] = useState(initialSlaFaixa);
   const [dateFrom, setDateFrom] = useState(initialFrom);
   const [dateTo, setDateTo] = useState(initialTo);
   const [sortKey, setSortKey] = useState<SortKey>("dataAbertura");
@@ -196,6 +205,14 @@ export function TicketsTable({
       if (filterTipo && t.tipoProblema !== filterTipo) return false;
       if (filterFase && t.fase !== filterFase) return false;
       if (filterOrigem && t.origem !== filterOrigem) return false;
+      if (filterSlaFaixa) {
+        const raw = parseFloat(t.sla ?? "");
+        const v = isNaN(raw) ? null : Math.max(0, raw);
+        if (v === null) return false;
+        if (filterSlaFaixa === "ok"      && v > 5) return false;
+        if (filterSlaFaixa === "atencao" && (v <= 5 || v > 20)) return false;
+        if (filterSlaFaixa === "critico" && v <= 20) return false;
+      }
       if (dateFromMs !== null || dateToMs !== null) {
         const d = parseDate(t.dataAbertura)?.getTime() ?? null;
         if (d === null) return false;
@@ -208,7 +225,7 @@ export function TicketsTable({
       }
       return true;
     });
-  }, [tickets, search, filterStatus, filterPrioridade, filterPosVendas, filterTipo, filterFase, filterOrigem, dateFromMs, dateToMs]);
+  }, [tickets, search, filterStatus, filterPrioridade, filterPosVendas, filterTipo, filterFase, filterOrigem, filterSlaFaixa, dateFromMs, dateToMs]);
 
   const sorted = useMemo(
     () => [...filtered].sort((a, b) => compare(a, b, sortKey, sortDir)),
@@ -228,17 +245,17 @@ export function TicketsTable({
     setPage(1);
   }
 
-  const hasFilters = search || filterStatus || filterPrioridade || filterPosVendas || filterTipo || filterFase || filterOrigem || dateFrom || dateTo;
-  const activeFilterCount = [filterStatus, filterPrioridade, filterPosVendas, filterTipo, filterFase, filterOrigem, dateFrom || dateTo ? "period" : ""].filter(Boolean).length;
+  const hasFilters = search || filterStatus || filterPrioridade || filterPosVendas || filterTipo || filterFase || filterOrigem || filterSlaFaixa || dateFrom || dateTo;
+  const activeFilterCount = [filterStatus, filterPrioridade, filterPosVendas, filterTipo, filterFase, filterOrigem, filterSlaFaixa, dateFrom || dateTo ? "period" : ""].filter(Boolean).length;
 
   function clearAll() {
     setSearch(""); setFilterStatus(""); setFilterPrioridade("");
     setFilterPosVendas(""); setFilterTipo(""); setFilterFase(""); setFilterOrigem("");
-    setDateFrom(""); setDateTo("");
+    setFilterSlaFaixa(""); setDateFrom(""); setDateTo("");
     setPage(1);
   }
 
-  const hasInitialFilter = initialStatus || initialPrioridade || initialPosVendas || initialTipo || initialFase || initialOrigem || initialFrom;
+  const hasInitialFilter = initialStatus || initialPrioridade || initialPosVendas || initialTipo || initialFase || initialOrigem || initialSlaFaixa || initialFrom;
 
   return (
     <div className="bg-white rounded-xl border border-zinc-200 p-5">
@@ -252,6 +269,7 @@ export function TicketsTable({
           {initialTipo && <span className="font-semibold">Tipo = {initialTipo}</span>}
           {initialFase && <span className="font-semibold">Fase = {initialFase}</span>}
           {initialOrigem && <span className="font-semibold">Origem = {initialOrigem}</span>}
+          {initialSlaFaixa && <span className="font-semibold">SLA = {SLA_FAIXA_LABEL[initialSlaFaixa] ?? initialSlaFaixa}</span>}
           {initialFrom && <span className="font-semibold">Data = {initialFrom}{initialTo && initialTo !== initialFrom ? ` até ${initialTo}` : ""}</span>}
         </div>
       )}
@@ -350,10 +368,10 @@ export function TicketsTable({
               </div>
             </div>
 
-            {/* Linha 2: Fase, Origem, Período */}
+            {/* Linha 2: Fase, Origem, SLA, Período */}
             <div>
               <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Contexto & Período</label>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 <div>
                   <span className="block text-xs text-zinc-500 mb-1">Fase</span>
                   <select
@@ -374,6 +392,19 @@ export function TicketsTable({
                   >
                     <option value="">Todas</option>
                     {origens.map((o) => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <span className="block text-xs text-zinc-500 mb-1">Faixa de SLA</span>
+                  <select
+                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    value={filterSlaFaixa}
+                    onChange={(e) => { setFilterSlaFaixa(e.target.value); setPage(1); }}
+                  >
+                    <option value="">Todas as faixas</option>
+                    <option value="ok">0–5 dias (Bom)</option>
+                    <option value="atencao">5–20 dias (Atenção)</option>
+                    <option value="critico">&gt;20 dias (Crítico)</option>
                   </select>
                 </div>
                 <div>
