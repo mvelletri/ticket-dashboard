@@ -56,7 +56,7 @@ export function DailyChart({ data }: Props) {
           />
           <YAxis tick={{ fontSize: 11, fill: "#71717a" }} allowDecimals={false} />
           <Tooltip
-            formatter={(v: number, name: string) => [v, name === "abertos" ? "Abertos" : "Concluídos"]}
+            formatter={(v, name) => [v, name === "abertos" ? "Abertos" : "Concluídos"]}
             labelFormatter={(l) => `Data: ${formatDate(l)}`}
             cursor={{ fill: "#f0f9ff" }}
           />
@@ -73,7 +73,7 @@ export function DailyChart({ data }: Props) {
             radius={[3, 3, 0, 0]}
             maxBarSize={18}
             cursor="pointer"
-            onClick={(payload: DailyPoint) => handleClick(payload)}
+            onClick={(data: unknown) => handleClick(data as DailyPoint)}
           />
           <Line
             type="monotone"
@@ -81,7 +81,10 @@ export function DailyChart({ data }: Props) {
             stroke="#16a34a"
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 4, cursor: "pointer", onClick: (_: unknown, payload: { payload: DailyPoint }) => handleClick(payload.payload) }}
+            activeDot={{ r: 4, cursor: "pointer", onClick: (_evt: unknown, dotProps: unknown) => {
+              const dp = dotProps as { payload: DailyPoint };
+              if (dp?.payload) handleClick(dp.payload);
+            } }}
           />
         </ComposedChart>
       </ResponsiveContainer>

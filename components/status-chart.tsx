@@ -51,18 +51,19 @@ export function StatusChart({ data }: Props) {
             paddingAngle={2}
             dataKey="value"
             cursor="pointer"
-            onClick={(payload: { name: string }) =>
-              router.push(`/tickets?status=${encodeURIComponent(payload.name)}`)
-            }
+            onClick={(data: unknown) => {
+              const d = data as { name?: string };
+              if (d.name) router.push(`/tickets?status=${encodeURIComponent(d.name)}`);
+            }}
           >
             {data.map((entry, index) => (
               <Cell key={entry.name} fill={getColor(entry.name, index)} />
             ))}
           </Pie>
           <Tooltip
-            formatter={(v: number, _: string, props: { payload?: { name?: string } }) => [
+            formatter={(v, _name, props) => [
               `${v} tickets`,
-              props.payload?.name ?? "",
+              (props as { payload?: { name?: string } }).payload?.name ?? "",
             ]}
           />
           <Legend

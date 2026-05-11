@@ -45,7 +45,10 @@ export function BarChartCard({
 
   const barProps = {
     cursor: clickable ? "pointer" : "default",
-    onClick: (payload: { name: string }) => handleClick(payload.name),
+    onClick: (data: unknown) => {
+      const d = data as { name?: string };
+      if (d.name) handleClick(d.name);
+    },
   };
 
   if (horizontal) {
@@ -67,7 +70,7 @@ export function BarChartCard({
               tick={{ fontSize: 11 }}
               tickLine={false}
             />
-            <Tooltip formatter={(v: number) => [`${v} tickets`, ""]} cursor={{ fill: "#f0f9ff" }} />
+            <Tooltip formatter={(v) => [`${v} tickets`, ""]} cursor={{ fill: "#f0f9ff" }} />
             <Bar dataKey="value" radius={[0, 4, 4, 0]} {...barProps}>
               {display.map((entry) => (
                 <Cell key={entry.name} fill={PRIORITY_COLORS[entry.name] ?? color} />
@@ -97,7 +100,7 @@ export function BarChartCard({
             textAnchor="end"
           />
           <YAxis tick={{ fontSize: 11 }} />
-          <Tooltip formatter={(v: number) => [`${v} tickets`, ""]} cursor={{ fill: "#f0f9ff" }} />
+          <Tooltip formatter={(v) => [`${v} tickets`, ""]} cursor={{ fill: "#f0f9ff" }} />
           <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} {...barProps}>
             {display.map((entry) => (
               <Cell key={entry.name} fill={PRIORITY_COLORS[entry.name] ?? color} />
