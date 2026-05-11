@@ -176,7 +176,7 @@ export function TicketsTable({
        initialTipo.length || initialFase.length || initialOrigem.length ||
        initialRa.length || initialSlaFaixa.length || initialFrom)
   );
-  const perPage = 15;
+  const perPage = 50;
 
   const statuses = useMemo(
     () => [...new Set(tickets.map((t) => t.status).filter(Boolean))].sort() as string[],
@@ -444,16 +444,20 @@ export function TicketsTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-zinc-100 text-left text-xs text-zinc-500 font-semibold">
-              {COLUMNS.map((col) => (
-                <th
-                  key={col.key}
-                  className={`pb-2 pr-3 cursor-pointer select-none whitespace-nowrap hover:text-zinc-800 ${col.className ?? ""}`}
-                  onClick={() => handleSort(col.key)}
-                >
-                  {col.label}
-                  <SortIcon active={sortKey === col.key} dir={sortDir} />
-                </th>
-              ))}
+              {COLUMNS.flatMap((col, i) => {
+                const th = (
+                  <th
+                    key={col.key}
+                    className={`pb-2 pr-3 cursor-pointer select-none whitespace-nowrap hover:text-zinc-800 ${col.className ?? ""}`}
+                    onClick={() => handleSort(col.key)}
+                  >
+                    {col.label}
+                    <SortIcon active={sortKey === col.key} dir={sortDir} />
+                  </th>
+                );
+                if (i === 1) return [<th key="__sla_dot" className="pb-2 pr-2 w-5" />, th];
+                return [th];
+              })}
             </tr>
           </thead>
           <tbody>
@@ -468,6 +472,18 @@ export function TicketsTable({
               return (
                 <tr key={t.ticket ?? i} className="border-b border-zinc-50 hover:bg-zinc-50 align-top">
                   <td className="py-2 pr-3 font-mono text-blue-600 font-medium">{t.ticket}</td>
+                  <td className="py-2 pr-2">
+                    {sla !== null && (
+                      <span
+                        className={`inline-block w-2.5 h-2.5 rounded-full ${
+                          sla <= 5  ? "bg-green-500" :
+                          sla <= 20 ? "bg-yellow-400" :
+                                      "bg-red-500"
+                        }`}
+                        title={`SLA: ${sla.toFixed(1)} dias`}
+                      />
+                    )}
+                  </td>
                   <td className="py-2 pr-3">{badge(t.status, STATUS_BADGE, "bg-amber-50 text-amber-700")}</td>
                   <td className="py-2 pr-3">{badge(t.prioridade, PRIORITY_BADGE)}</td>
                   <td className="py-2 pr-3 max-w-[130px] truncate text-zinc-700" title={t.cliente ?? ""}>{t.cliente}</td>
