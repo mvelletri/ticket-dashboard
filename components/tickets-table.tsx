@@ -431,14 +431,15 @@ export function TicketsTable({
           </thead>
           <tbody>
             {paginated.map((t, i) => {
-              const sla = parseFloat(t.sla ?? "");
-              const slaColor = isNaN(sla)
+              const slaRaw = parseFloat(t.sla ?? "");
+              const sla = isNaN(slaRaw) ? null : Math.max(0, slaRaw);
+              const slaColor = sla === null
                 ? "text-zinc-400"
-                : sla < 0
-                ? "text-red-600 font-semibold"
-                : sla < 10
-                ? "text-orange-500"
-                : "text-zinc-700";
+                : sla <= 5
+                ? "text-green-600 font-medium"
+                : sla <= 20
+                ? "text-yellow-600 font-medium"
+                : "text-red-600 font-semibold";
               return (
                 <tr key={t.ticket ?? i} className="border-b border-zinc-50 hover:bg-zinc-50 align-top">
                   <td className="py-2 pr-3 font-mono text-blue-600 font-medium">{t.ticket}</td>
@@ -454,7 +455,7 @@ export function TicketsTable({
                   <td className="py-2 pr-3 text-zinc-500 whitespace-nowrap">{t.dataAbertura}</td>
                   <td className="py-2 pr-3 text-zinc-500 whitespace-nowrap">{t.ultimoContato ?? <span className="text-zinc-300">—</span>}</td>
                   <td className="py-2 pr-3">{badge(t.ra, RA_BADGE)}</td>
-                  <td className={`py-2 whitespace-nowrap ${slaColor}`}>{isNaN(sla) ? "—" : sla.toFixed(1)}</td>
+                  <td className={`py-2 whitespace-nowrap ${slaColor}`}>{sla === null ? "—" : sla.toFixed(1)}</td>
                 </tr>
               );
             })}

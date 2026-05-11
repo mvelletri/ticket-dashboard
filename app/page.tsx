@@ -3,6 +3,7 @@ import { KpiCard } from "@/components/kpi-card";
 import { StatusChart } from "@/components/status-chart";
 import { BarChartCard } from "@/components/bar-chart-card";
 import { DailyChart } from "@/components/daily-chart";
+import { SlaChart } from "@/components/sla-chart";
 import { DateRangePicker } from "@/components/date-range-picker";
 
 function isoDate(date: Date) {
@@ -28,7 +29,7 @@ export default async function IndicadoresPage({
   const to = params.to ?? today;
 
   const data = await getDashboardData(from, to);
-  const { kpis, byDay, byStatus, byPrioridade, byFase, byTipoProblema, byPosVendas, byOrigem } = data;
+  const { kpis, bySla, byDay, byStatus, byPrioridade, byFase, byTipoProblema, byPosVendas, byOrigem } = data;
 
   return (
     <main className="px-8 py-6 flex flex-col gap-6 max-w-screen-xl mx-auto w-full">
@@ -51,10 +52,10 @@ export default async function IndicadoresPage({
           color="green"
         />
         <KpiCard
-          label="SLA Vencido"
-          value={kpis.slaVencido}
-          sub="tickets com SLA negativo"
-          color={kpis.slaVencido > 0 ? "red" : "green"}
+          label="SLA Crítico"
+          value={kpis.slaCritico}
+          sub="tickets acima de 20 dias"
+          color={kpis.slaCritico > 0 ? "red" : "green"}
         />
         <KpiCard
           label="RAs Abertas"
@@ -72,6 +73,11 @@ export default async function IndicadoresPage({
       {/* Abertos e Concluídos por Dia */}
       <section>
         <DailyChart data={byDay} />
+      </section>
+
+      {/* SLA */}
+      <section>
+        <SlaChart data={bySla} />
       </section>
 
       {/* Status + Prioridade */}

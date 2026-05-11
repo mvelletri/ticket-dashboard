@@ -85,9 +85,12 @@ export async function getDashboardData(from?: string, to?: string) {
 
   const slaValues = rows
     .map((r) => parseFloat(r["SLA"] as string))
-    .filter((v) => !isNaN(v));
+    .filter((v) => !isNaN(v))
+    .map((v) => Math.max(0, v)); // negativos = 0
 
-  const slaVencido = slaValues.filter((v) => v < 0).length;
+  const slaOk      = slaValues.filter((v) => v <= 5).length;
+  const slaAtencao = slaValues.filter((v) => v > 5 && v <= 20).length;
+  const slaCritico = slaValues.filter((v) => v > 20).length;
   const raAberta = rows.filter((r) => r["RA"] === "Sim").length;
   const concluidos = rows.filter(
     (r) => r["Status"] === "Concluído" || r["Status"] === "Encerrado"
@@ -143,9 +146,10 @@ export async function getDashboardData(from?: string, to?: string) {
       total: rows.length,
       duplicados: duplicados.length,
       concluidos,
-      slaVencido,
+      slaCritico,
       raAberta,
     },
+    bySla: { ok: slaOk, atencao: slaAtencao, critico: slaCritico },
     byDay,
     byStatus: countBy(rows, "Status"),
     byPrioridade: countBy(
