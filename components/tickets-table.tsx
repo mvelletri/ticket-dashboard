@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { MultiSelect } from "./multi-select";
+import { TicketModal } from "./ticket-modal";
 
 export interface TicketRow {
   ticket: string | null;
@@ -23,6 +24,8 @@ export interface TicketRow {
   origem: string | null;
   pedidoNF: string | null;
   dataPedido: string | null;
+  rowIndex: number;
+  sheetsUrl: string;
 }
 
 interface Props {
@@ -111,8 +114,8 @@ function compare(a: TicketRow, b: TicketRow, key: SortKey, dir: SortDir): number
   if (key === "ticket") {
     return (parseInt(a.ticket ?? "0") - parseInt(b.ticket ?? "0")) * mul;
   }
-  const va = (a[key] ?? "").toLowerCase();
-  const vb = (b[key] ?? "").toLowerCase();
+  const va = String(a[key] ?? "").toLowerCase();
+  const vb = String(b[key] ?? "").toLowerCase();
   return va < vb ? -mul : va > vb ? mul : 0;
 }
 
@@ -171,6 +174,7 @@ export function TicketsTable({
   const [sortKey, setSortKey] = useState<SortKey>("dataAbertura");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1);
+  const [selectedTicket, setSelectedTicket] = useState<TicketRow | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(
     !!(initialStatus.length || initialPrioridade.length || initialPosVendas.length ||
        initialTipo.length || initialFase.length || initialOrigem.length ||
@@ -470,7 +474,11 @@ export function TicketsTable({
               return (
                 <tr key={t.ticket ?? i} className={`border-b border-zinc-100 align-top group hover:bg-zinc-100 ${rowBg}`}>
                   <td className={`py-2 pr-3 sticky left-0 z-10 group-hover:bg-zinc-100 border-r border-zinc-100 ${rowBg}`}>
-                    <span className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTicket(t)}
+                      className="flex items-center gap-2 hover:underline underline-offset-2"
+                    >
                       {sla !== null && (
                         <span
                           className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
@@ -482,7 +490,7 @@ export function TicketsTable({
                         />
                       )}
                       <span className="font-mono text-blue-600 font-medium">{t.ticket}</span>
-                    </span>
+                    </button>
                   </td>
                   <td className="py-2 pr-3 text-center">{badge(t.status, STATUS_BADGE, "bg-amber-50 text-amber-700")}</td>
                   <td className="py-2 pr-3 text-center">{badge(t.prioridade, PRIORITY_BADGE)}</td>
@@ -522,6 +530,10 @@ export function TicketsTable({
             Próxima →
           </button>
         </div>
+      )}
+
+      {selectedTicket && (
+        <TicketModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
       )}
     </div>
   );

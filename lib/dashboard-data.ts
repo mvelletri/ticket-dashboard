@@ -22,6 +22,8 @@ export interface TicketRow {
   origem: string | null;
   pedidoNF: string | null;
   dataPedido: string | null;
+  rowIndex: number;
+  sheetsUrl: string;
 }
 
 export interface DailyPoint {
@@ -145,6 +147,8 @@ export async function getDashboardData(from?: string, to?: string) {
     origem: r["Origem"],
     pedidoNF: r["Pedido ou NF"],
     dataPedido: r["Data do Pedido"],
+    rowIndex: parseInt(r["_rowIndex"] as string),
+    sheetsUrl: `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEETS_SPREADSHEET_ID}/edit#gid=0&range=A${r["_rowIndex"]}`,
   }));
 
   return {

@@ -17,9 +17,10 @@ export async function getSheetRows() {
   const rows = response.data.values || [];
   const headers = rows[0];
 
-  return rows.slice(1).map((row) =>
-    Object.fromEntries(
+  return rows.slice(1).map((row, i) => ({
+    ...Object.fromEntries(
       headers.map((header, index) => [header, row[index] || null])
-    )
-  );
+    ),
+    _rowIndex: String(i + 2), // row 1 = cabeçalho, dados começam na linha 2
+  }));
 }
